@@ -51,19 +51,13 @@ dispatch(Route) ->
 
 % Callbacks
 
-'51'(Route, Vals) ->
-    #{path := Path} = Route,
-     io:format("in router:'51' Path is ~p Vals is ~p~n", [Path, Vals]),
+'51'(_Route, _Vals) ->
     [<<"51 Welcome to Area 51 👽\r\n"/utf8>>].
 
-'60'(Route, Vals)->
-    #{path := Path} = Route,
-     io:format("in router:'60' Path is ~p Vals is ~p~n", [Path, Vals]),
+'60'(_Route, _Vals)->
     [<<"60 Criminal Code Section 60 Violation 👮\r\n"/utf8>>].
 
-'60 (nonce)'(Route, Vals)->
-    #{path := Path} = Route,
-     io:format("in router:'60 (nonce)' Path is ~p Vals is ~p~n", [Path, Vals]),
+'60 (nonce)'(_Route, _Vals)->
     [<<"60 Criminal Code Section 60 Violation - you're goin to jail ya nonce 🚓\r\n"/utf8>>].
 
 init(_Args) ->
