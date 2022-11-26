@@ -1,0 +1,2 @@
+#!/bin/bash
+docker exec -u root -t -i vega_and_altair-vega_and_altair-1 /bin/bash

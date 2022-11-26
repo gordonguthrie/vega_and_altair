@@ -1,0 +1,15 @@
+{application, vega_and_altair,
+ [{description, "An OTP Dating Site over Gemini"},
+  {vsn, "0.1.0"},
+  {registered, []},
+  {mod, {vega_and_altair, []}},
+  {applications,
+   [kernel,
+    stdlib
+   ]},
+  {env,[]},
+  {modules, []},
+
+  {licenses, ["GNU GPL V3"]},
+  {links, []}
+ ]}.
