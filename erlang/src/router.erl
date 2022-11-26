@@ -19,7 +19,8 @@
          dispatch/1,
          '51'/2,
          '60'/2,
-         '60 (nonce)'/2
+         '60 (nonce)'/2,
+         make_nonce/3
          ]).
 
 -record(state, {routes = [], salt = ""}).
