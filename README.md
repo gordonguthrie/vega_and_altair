@@ -55,3 +55,5 @@ Use your favourite Gemini client to attach to `gemini://localhost` and away you 
 In production you will need to rejig the certificates as the SSL connection is signed for the URL so gently frig `generate_self_signed_certs.sh`.
 
 At a minimum replace `localhost` with the URL you are deploying to, but it would be polite to replace Deneb as well.
+
+This repo has a nonce salt in `sys.config` - ya need yer own condiments ya nonce, or anyone will be able to spoof your URLs for cross-site exploits, innit?
