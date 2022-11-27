@@ -30,8 +30,8 @@ init([]) ->
     SupFlags = #{strategy => one_for_all,
                  intensity => 0,
                  period => 1},
-    Router = {router, {router, start_link, []},
-                permanent, 5000, worker, [router]},
+    Router = {laika_router, {laika_router, start_link, []},
+                permanent, 5000, worker, [laika_router]},
     ChildSpecs = [Router],
     {ok, {SupFlags, ChildSpecs}}.
 

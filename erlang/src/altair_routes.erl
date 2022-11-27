@@ -1,4 +1,4 @@
--module(routes).
+-module(altair_routes).
 
 %%%-------------------------------------------------------------------
 %% @doc routes
@@ -37,9 +37,10 @@ get_routes() ->
     % with a prefix of a `:`
     % so "/home/:user" will match "/home/gordon" and return a KV of `{"user", "gordon"}`
     [
-        {"/",            ?PUBLIC,      {vega, root}},
-        {"/home/:user",  ?USERLOGIN,   {vega, home}},
-        {"/nonce",       ?USERNONCED,  {vega, root}},
-        {"/admin",       ?ADMINLOGIN,  {vega, admin}},
-        {"/admin/nonce", ?ADMINNONCED, {vega, admin_action}}
+        {"/",                 ?PUBLIC,      {vega, root}},
+        {"/lover",            ?USERLOGIN,   {vega, lover}},
+        {"/lover/am/:who",    ?USERNONCED,  {vega, is}},
+        {"/lover/wunts/:who", ?USERNONCED,  {vega, wunts}},
+        {"/admin",            ?ADMINLOGIN,  {vega, admin}},
+        {"/admin/nonce",      ?ADMINNONCED, {vega, admin_action}}
     ].
