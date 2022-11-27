@@ -20,10 +20,11 @@
          '51'/2,
          '60'/2,
          '60 (nonce)'/2,
+         '60 (hacker)'/2,
          make_nonce/3
          ]).
 
--record(state, {routes = [], salt = ""}).
+-record(state, {routes = [], salt = "", admins = []}).
 
 % API
 
@@ -52,24 +53,37 @@ dispatch(Route) ->
 
 % Callbacks
 
-'51'(_Route, _Vals) ->
+'51'(Route, Vals) ->
+    io:format("in 51 Route is ~p Vals is ~p~n", [Route, Vals]),
     [<<"51 Welcome to Area 51 👽\r\n"/utf8>>].
 
-'60'(_Route, _Vals)->
+'60'(Route, Vals)->
+    io:format("in 60 Route is ~p Vals is ~p~n", [Route, Vals]),
     [<<"60 Criminal Code Section 60 Violation 👮\r\n"/utf8>>].
 
-'60 (nonce)'(_Route, _Vals)->
+'60 (nonce)'(Route, Vals)->
+    io:format("in 60 nonce Route is ~p Vals is ~p~n", [Route, Vals]),
     [<<"60 Criminal Code Section 60 Violation - you're goin to jail ya nonce 🚓\r\n"/utf8>>].
 
+'60 (hacker)'(Route, Vals)->
+    io:format("in 60 hacker Route is ~p Vals is ~p~n", [Route, Vals]),
+    [<<"60 Criminal Code Section 60 Violation - back off hacker ☠️\r\n"/utf8>>].
+
 init(_Args) ->
-    {ok, Salt} = application:get_env(vega_and_altair, salt),
+    {ok, Salt}   = application:get_env(vega_and_altair, salt),
+    {ok, Admins} = application:get_env(vega_and_altair, admins),
     true = register(?MODULE, self()),
     Routes = get_routes(),
     CompiledRoutes = compile_routes(Routes),
-    {ok, #state{routes = CompiledRoutes, salt = Salt}}.
+    {ok, #state{routes = CompiledRoutes,
+                salt   = Salt,
+                admins = Admins}}.
 
 handle_call({route, Route}, _From, State) ->
-    Reply = get_dispatch(Route, State#state.routes, State#state.salt),
+    Routes = State#state.routes,
+    Salt = State#state.salt,
+    Admins = State#state.admins,
+    Reply = get_dispatch(Route, Routes, Salt, Admins),
     {reply, Reply, State}.
 
 handle_cast(_Msg, State) ->
@@ -86,71 +100,111 @@ code_change(_OldVsn, State, _Extra) ->
 
 %% Internal functions
 
-get_dispatch(Route, Routes, Salt) ->
-    match_route(Routes, Route, Salt).
+get_dispatch(Route, Routes, Salt, Admins) ->
+    match_route(Routes, Route, Salt, Admins).
 
-match_route([], _, _Salt) -> {{router, '51'}, []};
-match_route([H | T], Route, Salt) ->
+match_route([], _, _Salt, _Admins) -> {{router, '51'}, []};
+match_route([H | T], Route, Salt, Admins) ->
     #{path := GotPath, id := Id} = Route,
-    #{path := ExpPath, requires_login := Login, is_nonced := Nonced, dispatch := MF} = H,
-    case unnonce(GotPath, Nonced, Id, Salt) of
-        {invalid, Error} ->
-            Error;
-        Path ->
-            case match_path(Path, ExpPath, []) of
-                no_match      -> match_route(T, Route, Salt);
-                {match, Vals} ->
-                case {Id, Login} of
-                    {no_identity, login} -> {{router, '60'}, []};
-                    _                    -> {MF, Vals}
-                end
+    #{path := ExpPath, needs_login := Login, is_admin := IsAdmin, dispatch := MF} = H,
+    case match_path(GotPath, ExpPath, []) of
+        no_match  ->
+            match_route(T, Route, Salt, Admins);
+        {check_nonce, Vals} ->
+            handle_nonce_check(GotPath, Id, MF, Vals, Salt, IsAdmin, Admins);
+        {match, Vals} ->
+            case {Id, Login, IsAdmin} of
+                {no_identity, login, _} ->
+                    {{router, '60'}, []};
+                {_, login, admin} ->
+                    case check_admin(Admins, Id) of
+                        {invalid, Error} ->
+                            Error;
+                        _ ->
+                            {MF, Vals}
+                    end;
+                {_, _, user} ->
+                    {MF, Vals}
             end
     end.
 
-unnonce(Path,  no_nonce, _, _) -> Path;
-unnonce(_Path, nonce, no_identity, _) -> {invalid, {{router, '60'}, []}};
-unnonce(Path,  nonce, Id, Salt) ->
-    [Nonce | Rest] = lists:reverse(Path),
-    OrigPath = lists:reverse(Rest),
-    ExpNonce = make_nonce(Path, Id, Salt),
-    case Nonce of
-        ExpNonce -> OrigPath;
-        _        -> {invalid, {{router, '60 (nonce)'}, []}}
+handle_nonce_check(GotPath, Id, MF, Vals, Salt, IsAdmin, Admins) ->
+    case Id of
+        no_identity ->
+            {{router, '60'}, []};
+        _ ->
+            [Nonce | Rest] = lists:reverse(GotPath),
+            OrigPath = string:join(lists:reverse(Rest), "/"),
+            ExpNonce = make_nonce(OrigPath, Id, Salt),
+            case Nonce of
+                ExpNonce ->
+                    case IsAdmin of
+                        user ->
+                            {MF, Vals};
+                        admin ->
+                            case check_admin(Admins, Id) of
+                                {invalid, Error} ->
+                                    Error;
+                                _ ->
+                                    {MF, Vals}
+                            end
+                    end;
+                _ ->
+                    {{router, '60 (nonce)'}, []}
+            end
     end.
 
-match_path([], [], Acc)                      -> {match, Acc};
-match_path([H | T1], [H | T2], Acc)          -> match_path(T1, T2, Acc);
-match_path([H | T1], [{Name, []} | T2], Acc) -> match_path(T1, T2, [{Name, H} | Acc]);
-match_path(_, _, _Acc)                       -> no_match.
+
+check_admin([],       _Id) -> {invalid, {{router, '60 (hacker)'}, []}};
+check_admin([Id | _T], Id) -> is_admin;
+check_admin([_H | T],  Id) -> check_admin(T, Id).
+
+match_path([],        [],                Acc) -> {match, Acc};
+match_path([H | T1],  [H | T2],          Acc) -> match_path(T1, T2, Acc);
+match_path([H | T1],  [{Name, []} | T2], Acc) -> match_path(T1, T2, [{Name, H} | Acc]);
+match_path([_H | []], [nonce | []],      Acc) -> {check_nonce, Acc};
+match_path(_,         _,                _Acc) -> no_match.
 
 compile_routes(Routes) -> [compile_route(X) || X <- Routes].
 
-compile_route({Path, Is_nonced, Requires_login, Dispatch}) ->
-    #{path           => compile_path(Path),
-      is_nonced      => Is_nonced,
-      requires_login => Requires_login,
-      dispatch       => Dispatch}.
+compile_route({Path, {NeedsLogin, IsAdmin}, Dispatch}) ->
+    #{path        => compile_path(Path, NeedsLogin),
+      needs_login => NeedsLogin,
+      is_admin    => IsAdmin,
+      dispatch    => Dispatch}.
 
-compile_path(Path) ->
-    Segs = string:tokens(Path, "/"),
-    [make_seg(X) || X <- Segs].
+compile_path(Path, NeedsLogin) ->
+    Segs   = string:tokens(Path, "/"),
+    KVSegs = [make_seg(X) || X <- Segs],
+    case NeedsLogin of
+        nonce -> KVSegs ++ [nonce];
+        _     -> KVSegs
+    end.
 
 make_seg(":" ++ Seg) -> {Seg, []};
 make_seg(X)          -> X.
 
+-define(PUBLIC,         {no_login, user}).
+-define(USERLOGIN,      {login, user}).
+-define(USERNONCED,     {nonce, user}).
+-define(ADMINLOGIN,     {login, admin}).
+-define(ADMINNONCED,    {nonce, admin}).
+
 get_routes() ->
-    % a route is a tuple of:
-    % * path           requires a string
-    % * is_nonced      requires [nonce | no_nonce]
-    % * requires_login requires [login | no_login]
-    % * dispatch       requires {ModuleName, FunctionName}
+    % the macros define the only logical sets of combinations
+    % use them
+    % you can turn a URL segment into a value that can be picked up
+    % with a prefix of a `:`
+    % so "/home/:user" will match "/home/gordon" and return a KV of `{"user", "gordon"}`
     [
-        {"/",           no_nonce, no_login, {vega, root}},
-        {"/home/:user", no_nonce, login,    {vega, home}},
-        {"/nonce",      nonce,    no_login, {vega, root}}
+        {"/",            ?PUBLIC,      {vega, root}},
+        {"/home/:user",  ?USERLOGIN,   {vega, home}},
+        {"/nonce",       ?USERNONCED,  {vega, root}},
+        {"/admin",       ?ADMINLOGIN,  {vega, admin}},
+        {"/admin/nonce", ?ADMINNONCED, {vega, admin_action}}
     ].
 
 make_nonce(URL, #{key := K}, Salt) ->
     Nonce = crypto:hash(md5, list_to_binary([Salt, URL, integer_to_list(K)])),
     SafeNonce = binary:encode_hex(Nonce),
-    URL ++ binary_to_list(SafeNonce).
+    binary_to_list(SafeNonce).

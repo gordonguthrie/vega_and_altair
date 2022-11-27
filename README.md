@@ -50,6 +50,8 @@ Use your favourite Gemini client to attach to `gemini://localhost` and away you 
 * on Android in the App store [Deedum](https://play.google.com/store/apps/details?id=ca.snoe.deedum&hl=en_GB&gl=US&pli=1)
 * on Mac, Windows, Linux, iOS (testflight), Android (beta) [Lagrange](https://gmi.skyjake.fi/lagrange/)
 
+You won't be able to use the admin functions until you replace my public key in `config/sys.config` with your own.
+
 # In production
 
 In production you will need to rejig the certificates as the SSL connection is signed for the URL so gently frig `generate_self_signed_certs.sh`.
