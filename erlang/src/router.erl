@@ -1,5 +1,15 @@
 %% -*- erlang-indent-level: 4;indent-tabs-mode: nil -*-
 %% ex: ts=4 sw=4 et
+
+%%%-------------------------------------------------------------------
+%% @doc router
+%%
+%% the router is used to match incoming Gemini URLs to resources
+%% it picks up its routes from the modules routes.erl
+%%
+%% @end
+%%%-------------------------------------------------------------------
+
 -module(router).
 
 % http://erlang.org/doc/design_principles/gen_server_concepts.html
@@ -73,7 +83,7 @@ init(_Args) ->
     {ok, Salt}   = application:get_env(vega_and_altair, salt),
     {ok, Admins} = application:get_env(vega_and_altair, admins),
     true = register(?MODULE, self()),
-    Routes = get_routes(),
+    Routes = routes:get_routes(),
     CompiledRoutes = compile_routes(Routes),
     {ok, #state{routes = CompiledRoutes,
                 salt   = Salt,
@@ -183,27 +193,6 @@ compile_path(Path, NeedsLogin) ->
 
 make_seg(":" ++ Seg) -> {Seg, []};
 make_seg(X)          -> X.
-
-% admins must be logged in to be admins
--define(PUBLIC,      {no_login, user}).
--define(USERLOGIN,   {login,    user}).
--define(USERNONCED,  {nonce,    user}).
--define(ADMINLOGIN,  {login,    admin}).
--define(ADMINNONCED, {nonce,    admin}).
-
-get_routes() ->
-    % the macros define the only logical sets of combinations
-    % use them
-    % you can turn a URL segment into a value that can be picked up
-    % with a prefix of a `:`
-    % so "/home/:user" will match "/home/gordon" and return a KV of `{"user", "gordon"}`
-    [
-        {"/",            ?PUBLIC,      {vega, root}},
-        {"/home/:user",  ?USERLOGIN,   {vega, home}},
-        {"/nonce",       ?USERNONCED,  {vega, root}},
-        {"/admin",       ?ADMINLOGIN,  {vega, admin}},
-        {"/admin/nonce", ?ADMINNONCED, {vega, admin_action}}
-    ].
 
 make_nonce(URL, #{key := K}, Salt) ->
     Nonce = crypto:hash(md5, list_to_binary([Salt, URL, integer_to_list(K)])),
