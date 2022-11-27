@@ -184,11 +184,12 @@ compile_path(Path, NeedsLogin) ->
 make_seg(":" ++ Seg) -> {Seg, []};
 make_seg(X)          -> X.
 
+% admins must be logged in to be admins
 -define(PUBLIC,      {no_login, user}).
--define(USERLOGIN,   {login, user}).
--define(USERNONCED,  {nonce, user}).
--define(ADMINLOGIN,  {login, admin}).
--define(ADMINNONCED, {nonce, admin}).
+-define(USERLOGIN,   {login,    user}).
+-define(USERNONCED,  {nonce,    user}).
+-define(ADMINLOGIN,  {login,    admin}).
+-define(ADMINNONCED, {nonce,    admin}).
 
 get_routes() ->
     % the macros define the only logical sets of combinations
