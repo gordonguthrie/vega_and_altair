@@ -23,7 +23,7 @@ req_extensions = req_ext
 distinguished_name = dn
 
 [ dn ]
-C = Universe
+C = UK
 ST = MilkyWay
 L = DeepSpace
 O = Deneb

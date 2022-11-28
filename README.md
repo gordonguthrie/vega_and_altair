@@ -4,11 +4,11 @@ Vega and Altair are the starc-crossed lovers of the Milky Way
 
 This server is a dating site.
 
-# The Laika Server
+# The Belka Server
 
-Vega and Altair use the [Laika Gemini Server](https://github.com/gordonguthrie/laika.git)
+Vega and Altair use the [Belka Gemini Server](https://github.com/gordonguthrie/belka.git)
 
-There is a simpler [example](https://github.com/gordonguthrie/laika.git) of using Laika
+There is a simpler [example](https://github.com/gordonguthrie/belka.git) of using Belka
 
 # How to play with Vega And Altair
 

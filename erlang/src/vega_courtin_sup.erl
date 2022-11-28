@@ -1,14 +1,18 @@
 %%%-------------------------------------------------------------------
-%% @doc vega and altair top level supervisor.
+%% @doc vega and altair supervisor for courtin
 %%
 %% @end
 %%%-------------------------------------------------------------------
 
--module(vega_and_altair_sup).
+-module(vega_courtin_sup).
 
 -behaviour(supervisor).
 
--export([start_link/0]).
+-export([
+            start_link/0,
+            add_lover/1,
+            delete_lover/1
+        ]).
 
 -export([init/1]).
 
@@ -27,25 +31,26 @@ start_link() ->
 %%                  type => worker(),       % optional
 %%                  modules => modules()}   % optional
 init([]) ->
+    io:format("Starting vega courtin sup~n"),
     SupFlags = #{strategy => one_for_one,
                  intensity => 100,
                  period => 1},
-    Router     = {belka_router, {belka_router, start_link, []},
-                    permanent, 5000, worker, [belka_router]},
-    Admin      = {altair_admin, {altair_admin, start_link, []},
-                    permanent, 5000, worker, [altair_admin]},
-    Lovers      = {altair_lovers, {altair_lovers, start_link, []},
-                    permanent, 5000, worker, [altair_lovers]},
-    CourtinSup = {vega_courtin_sup, {vega_courtin_sup, start_link, []},
-                    permanent, 5000, supervisor, [vega_courtin_sup]},
-    ChildSpecs = [
-                    Router,
-                    Admin,
-                    Lovers,
-                    CourtinSup
-                 ],
+    ChildSpecs = [],
     {ok, {SupFlags, ChildSpecs}}.
 
-%% internal functions
+add_lover(Id) ->
+    ChildSpec = gen_child_spec(Id),
+    case supervisor:start_child(?MODULE, ChildSpec) of
+        {ok,_}                        -> ok;
+        {error, {already_started, _}} -> ok;
+        Else                          -> Else
+    end.
 
+delete_lover(#{key := K}) ->
+    ok = supervisor:terminate_child(?MODULE, K).
+
+%% internal functions
+gen_child_spec(#{key := K} = Id) ->
+    {K, {vega_lover, start_link, [Id]},
+     temporary, infinity, worker, [vega_lover]}.
 

@@ -26,29 +26,31 @@ root(Route, _Vals) ->
 		"\r\n"
 	] ++ get_footer(Route).
 
-lover(Route, Vals) ->
+lover(#{id := Id}, _Vals) ->
 	Path = ["lover"],
-	#{id := Id} = Route,
-	io:format("in vega:lover Path is ~p Vals is ~p~n", [Path, Vals]),
+	ok = altair_lovers:add_lover(Id),
+	#{name := Name} = Id,
 	[
-		<<"20 text/gemini\r\n### 😻 Who are ya pussycat?\r\n"/utf8>>,
+		<<"20 text/gemini\r\n### 😻 Hey "/utf8>>,
+		Name,
+		", who are ya pussycat?\r\n",
 		"\r\n",
 		<<"If any 😼 is lookin for any of these things, they'll find ya.\r\n"/utf8>>,
 		"\r\n",
 		make_link(Path, "am/str8boi",   Id, <<"♂ str8 boi"/utf8>>),
 		make_link(Path, "am/lezzer",    Id, <<"⚢ lezzer"/utf8>>),
 		make_link(Path, "am/str8gurl",  Id, <<"♂ str8 gurl"/utf8>>),
-		make_link(Path, "am/transmacs", Id, <<"🤴 trans masc"/utf8>>),
+		make_link(Path, "am/transmasc", Id, <<"🤴 trans masc"/utf8>>),
 		make_link(Path, "am/fairy",     Id, <<"⚣ fairy"/utf8>>),
 		make_link(Path, "am/bi",        Id, <<"⚤ bi"/utf8>>),
 		make_link(Path, "am/polly",     Id, <<"🦜 polly"/utf8>>),
 		make_link(Path, "am/transgurl", Id, <<"🚂 trans gurl"/utf8>>)
 	].
 
-is(Route, Vals) ->
+is(#{id := Id} = Route, Vals) ->
 	io:format("in is route is ~p~nVals is ~p~n", [Route, Vals]),
 	Path = ["lover"],
-	#{id := Id} = Route,
+	ok = altair_lovers:who_am_I(Id, Vals),
 	[
 		"20 text/gemini\r\n",
 		<<"=> lover/desires 😻 Wut seeks ya ❤️ pussycat?"/utf8>>,
@@ -56,7 +58,7 @@ is(Route, Vals) ->
 		make_link(Path, "wunts/str8boi",   Id, <<"♂ str8 boi"/utf8>>),
 		make_link(Path, "wunts/lezzer",    Id, <<"⚢ lezzer"/utf8>>),
 		make_link(Path, "wunts/str8gurl",  Id, <<"♂ str8 gurl"/utf8>>),
-		make_link(Path, "wunts/transmacs", Id, <<"🤴 trans masc"/utf8>>),
+		make_link(Path, "wunts/transmasc", Id, <<"🤴 trans masc"/utf8>>),
 		make_link(Path, "wunts/fairy",     Id, <<"⚣ fairy"/utf8>>),
 		make_link(Path, "wunts/bi",        Id, <<"⚤ bi"/utf8>>),
 		make_link(Path, "wunts/polly",     Id, <<"🦜 polly"/utf8>>),
@@ -64,8 +66,9 @@ is(Route, Vals) ->
 
 	].
 
-wunts(Route, Vals) ->
+wunts(#{id := Id} = Route, Vals) ->
 	io:format("in desires route is ~p~nVals is ~p~n", [Route, Vals]),
+	ok = altair_lovers:wut_I_wunt(Id, Vals),
 	[
 		<<"20 text/gemini\r\n 🏹 shot, looking for a ❤️\r\n"/utf8>>
 	].
@@ -83,7 +86,7 @@ admin(Route, Vals) ->
 
 make_link(Path, Extension, Id, Text) when is_binary(Text) ->
 	URL = string:join(Path ++ [Extension], "/"),
-	Nonce = laika_router:get_nonce(URL, Id),
+	Nonce = belka_router:get_nonce(URL, Id),
 	Start = list_to_binary("=> " ++ "/" ++ URL ++ "/" ++ Nonce ++ " "),
 	<<Start/binary, Text/binary, "\r\n">>.
 

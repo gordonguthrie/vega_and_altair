@@ -15,7 +15,7 @@ start(_StartType, _StartArgs) ->
     Port = 1965,
     CertFile = "/vega_and_altair/priv/keys/server.crt",
     KeyFile  = "/vega_and_altair/priv/keys/server.key",
-    _PID = laika:start(Port, CertFile, KeyFile, {laika_router, dispatch}),
+    _PID = belka:start(Port, CertFile, KeyFile, {belka_router, dispatch}),
     vega_and_altair_sup:start_link().
 
 stop(_State) ->
