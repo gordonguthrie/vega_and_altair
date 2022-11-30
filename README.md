@@ -24,9 +24,16 @@ Under active development - so not working fully, YMMV.
 
 # The Belka Server
 
-Vega and Altair use the [Belka Gemini Server](https://github.com/gordonguthrie/belka.git)
+Vega and Altair use the [Belka Gemini Server](https://github.com/gordonguthrie/belka)
 
-There is a simpler [example](https://github.com/gordonguthrie/belka.git) of using Belka
+There is a simpler [example](https://github.com/gordonguthrie/belka-example) of using Belka
+
+# Belka Components
+
+This app uses two components from the Belka family which are provided as seperate repos:
+
+* [Belka Router](https://github.com/gordonguthrie/belka-router) - a URL router
+* [Belka Templates](https://github.com/gordonguthrie/belka-templates) - simple text-based templating system
 
 # How to play with Vega And Altair
 
