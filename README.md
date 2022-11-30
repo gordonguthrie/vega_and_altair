@@ -4,6 +4,24 @@ Vega and Altair are the starc-crossed lovers of the Milky Way
 
 This server is a dating site.
 
+```
+ __          __        _      _____
+ \ \        / /       | |    |_   _|
+  \ \  /\  / /__  _ __| | __   | |  _ __
+   \ \/  \/ / _ \| '__| |/ /   | | | '_ \
+    \  /\  / (_) | |  |   <   _| |_| | | |
+  ___\/  \/ \___/|_|  |_|\_\ |_____|_| |_|
+ |  __ \
+ | |__) | __ ___   __ _ _ __ ___  ___ ___
+ |  ___/ '__/ _ \ / _` | '__/ _ \/ __/ __|
+ | |   | | | (_) | (_| | | |  __/\__ \__ \
+ |_|   |_|  \___/ \__, |_|  \___||___/___/
+                   __/ |
+                  |___/
+```
+
+Under active development - so not working fully, YMMV.
+
 # The Belka Server
 
 Vega and Altair use the [Belka Gemini Server](https://github.com/gordonguthrie/belka.git)
