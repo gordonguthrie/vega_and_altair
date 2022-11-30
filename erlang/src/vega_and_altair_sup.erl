@@ -34,14 +34,17 @@ init([]) ->
                     permanent, 5000, worker, [belka_router]},
     Admin      = {altair_admin, {altair_admin, start_link, []},
                     permanent, 5000, worker, [altair_admin]},
-    Lovers      = {altair_lovers, {altair_lovers, start_link, []},
+    Lovers     = {altair_lovers, {altair_lovers, start_link, []},
                     permanent, 5000, worker, [altair_lovers]},
+    Templates  = {belka_templates, {belka_templates, start_link, []},
+                    permanent, 5000, worker, [belka_templates]},
     CourtinSup = {vega_courtin_sup, {vega_courtin_sup, start_link, []},
                     permanent, 5000, supervisor, [vega_courtin_sup]},
     ChildSpecs = [
                     Router,
                     Admin,
                     Lovers,
+                    Templates,
                     CourtinSup
                  ],
     {ok, {SupFlags, ChildSpecs}}.

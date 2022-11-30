@@ -1,96 +1,112 @@
 -module(vega).
 
+% user API
 -export([
 			root/2,
 			lover/2,
 			is/2,
 			wunts/2,
+			about/2
+		]).
+
+% administrator API
+-export([
 			admin/2
 		]).
 
+-import(vega_urls, [
+					 	make_link/3,
+					 	make_action_link/4,
+					 	make_redirect/1,
+					 	make_input/1,
+					 	make_unicode/1
+				    ]).
+
 % route handlers API
 
-root(Route, _Vals) ->
+root(#{id := no_identity} = _Route, _Vals) ->
+	Name =  "Stranger",
+	Page =
+		[
+			belka_templates:render("home_body", [{name, Name}]),
+			make_unicode("## 👓 identify yourself!")
+		],
+	io:format("Page is ~p~n", [Page]),
+	Page;
+root(#{id := #{name := Name} = Id} = _Route, _Vals) ->
+	IsLover = altair_lovers:is_lover(Id),
+	Footer = case IsLover of
+		false             -> make_link(["/"], "lover", "😻 What's ya story, pussycat?");
+		{true, is}        -> make_link(["/"], "lover", "😻 Who are ya, pussycat?");
+		{true, wunts}     -> make_link(["/"], "lover", "😻 Wut ❤️ seeks ya, pussycat?");
+		{true, about_moi} -> make_link(["/"], "lover", "💌 Da balcony is yours, Juliette");
+		{true, complete}  -> make_link(["/"], "",      "😻 🏹 💘💞")
+	end,
 	[
-		"20 text/gemini\r\n",
-		<<"### Welcome to Vega and Altair, star-crossed lover 💫😻.\r\n"/utf8>>,
-		"\r\n",
-		"May you find whoever you are seekin.\r\n",
-		"\r\n",
-		<<"This is a 👻 site - data is never saved. Conversations  ⚰️  when you choose to kill them or if neither party has contributed in 7 days.\r\n"/utf8>>,
-		"\r\n",
-		<<"Everythin also  ⚰️   if the system goes down for maintenance.\r\n"/utf8>>,
-		"\r\n",
-		"You can, of course, delete your profile at any time and feel free to use a disposable identity.\r\n",
-		"\r\n",
-		"\r\n"
-	] ++ get_footer(Route).
+		belka_templates:render("home_body", [{name, Name}]),
+		Footer
+	].
 
 lover(#{id := Id}, _Vals) ->
 	Path = ["lover"],
-	ok = altair_lovers:add_lover(Id),
 	#{name := Name} = Id,
-	[
-		<<"20 text/gemini\r\n### 😻 Hey "/utf8>>,
-		Name,
-		", who are ya pussycat?\r\n",
-		"\r\n",
-		<<"If any 😼 is lookin for any of these things, they'll find ya.\r\n"/utf8>>,
-		"\r\n",
-		make_link(Path, "am/str8boi",   Id, <<"♂ str8 boi"/utf8>>),
-		make_link(Path, "am/lezzer",    Id, <<"⚢ lezzer"/utf8>>),
-		make_link(Path, "am/str8gurl",  Id, <<"♂ str8 gurl"/utf8>>),
-		make_link(Path, "am/transmasc", Id, <<"🤴 trans masc"/utf8>>),
-		make_link(Path, "am/fairy",     Id, <<"⚣ fairy"/utf8>>),
-		make_link(Path, "am/bi",        Id, <<"⚤ bi"/utf8>>),
-		make_link(Path, "am/polly",     Id, <<"🦜 polly"/utf8>>),
-		make_link(Path, "am/transgurl", Id, <<"🚂 trans gurl"/utf8>>)
-	].
+	IsLover = altair_lovers:is_lover(Id),
+	case IsLover of
+		false ->
+			altair_lovers:add_lover(Id),
+			make_redirect("/lover");
+		{true, is} ->
+			[
+				belka_templates:render("lover_is", [{name, Name}]),
+				make_action_link(Path, "am/str8boi",   Id, "♂ str8 boi"),
+				make_action_link(Path, "am/lezzer",    Id, "⚢ lezzer"),
+				make_action_link(Path, "am/str8gurl",  Id, "♂ str8 gurl"),
+				make_action_link(Path, "am/transmasc", Id, "🤴 trans masc"),
+				make_action_link(Path, "am/fairy",     Id, "⚣ fairy"),
+				make_action_link(Path, "am/bi",        Id, "⚤ bi"),
+				make_action_link(Path, "am/polly",     Id, "🦜 polly"),
+				make_action_link(Path, "am/transgurl", Id, "🚂 trans gurl")
+			];
+		{true, wunts} ->
+			[
+				belka_templates:render("lover_wunts", []),
+				make_action_link(Path, "wunts/str8boi",   Id, "♂ str8 boi"),
+				make_action_link(Path, "wunts/lezzer",    Id, "⚢ lezzer"),
+				make_action_link(Path, "wunts/str8gurl",  Id, "♂ str8 gurl"),
+				make_action_link(Path, "wunts/transmasc", Id, "🤴 trans masc"),
+				make_action_link(Path, "wunts/fairy",     Id, "⚣ fairy"),
+				make_action_link(Path, "wunts/bi",        Id, "⚤ bi"),
+				make_action_link(Path, "wunts/polly",     Id, "🦜 polly"),
+				make_action_link(Path, "wunts/transgurl", Id, "🚂 trans gurl")
+			];
+		{true, about_moi} ->
+			[
+				belka_templates:render("lover_about_moi", []),
+				make_action_link(["lover"], "about/moi", Id, "💌 shoot yer shot, make yer pitch 🏹")
+			];
+		{true, complete}  ->
+			make_redirect("/")
+	end.
 
-is(#{id := Id} = Route, Vals) ->
-	io:format("in is route is ~p~nVals is ~p~n", [Route, Vals]),
-	Path = ["lover"],
-	ok = altair_lovers:who_am_I(Id, Vals),
-	[
-		"20 text/gemini\r\n",
-		<<"=> lover/desires 😻 Wut seeks ya ❤️ pussycat?"/utf8>>,
-		"\r\n",
-		make_link(Path, "wunts/str8boi",   Id, <<"♂ str8 boi"/utf8>>),
-		make_link(Path, "wunts/lezzer",    Id, <<"⚢ lezzer"/utf8>>),
-		make_link(Path, "wunts/str8gurl",  Id, <<"♂ str8 gurl"/utf8>>),
-		make_link(Path, "wunts/transmasc", Id, <<"🤴 trans masc"/utf8>>),
-		make_link(Path, "wunts/fairy",     Id, <<"⚣ fairy"/utf8>>),
-		make_link(Path, "wunts/bi",        Id, <<"⚤ bi"/utf8>>),
-		make_link(Path, "wunts/polly",     Id, <<"🦜 polly"/utf8>>),
-		make_link(Path, "wunts/transgurl", Id, <<"🚂 trans gurl"/utf8>>)
+is(#{id := Id}, Vals) ->
+	ok = altair_lovers:who_I_am(Id, Vals),
+	make_redirect("/lover").
 
-	].
-
-wunts(#{id := Id} = Route, Vals) ->
-	io:format("in desires route is ~p~nVals is ~p~n", [Route, Vals]),
+wunts(#{id := Id}, Vals) ->
 	ok = altair_lovers:wut_I_wunt(Id, Vals),
-	[
-		<<"20 text/gemini\r\n 🏹 shot, looking for a ❤️\r\n"/utf8>>
-	].
+	make_redirect("/lover").
 
-admin(Route, Vals) ->
-	#{path := Path} = Route,
-	io:format("in vega:admin Path is ~p Vals is ~p~n", [Path, Vals]),
+about(#{querykvs := []} =_Route, _Vals) ->
+	% send the user home
+	make_input("give it your best shot");
+about(#{id := Id, querykvs := [{Text, true}]} = _Route, _Vals) ->
+	ok = altair_lovers:about_moi(Id, Text),
+	make_redirect("/").
+
+admin(_Route, _Vals) ->
 	[
-		"20 text/gemini\r\n",
-		"Welcome Administrator\r\n",
-		"=> admin/nonce2F24DC1FE7AEEB1E8F8BC906232A7DB9 try and do somethin\r\n"
+		belka_templates:render("admin", [])
 	].
 
 % internal functions
 
-make_link(Path, Extension, Id, Text) when is_binary(Text) ->
-	URL = string:join(Path ++ [Extension], "/"),
-	Nonce = belka_router:get_nonce(URL, Id),
-	Start = list_to_binary("=> " ++ "/" ++ URL ++ "/" ++ Nonce ++ " "),
-	<<Start/binary, Text/binary, "\r\n">>.
-
-get_footer(#{id := no_identity}) ->
-	[<<"👓 identify yourself!\r\n"/utf8>>];
-get_footer(_) ->
-	[<<"=> /lover 😻 what's ya story, pussycat?\r\n"/utf8>>].

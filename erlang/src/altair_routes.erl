@@ -40,7 +40,8 @@ get_routes() ->
         {"/",                 ?PUBLIC,      {vega, root}},
         {"/lover",            ?USERLOGIN,   {vega, lover}},
         {"/lover/am/:who",    ?USERNONCED,  {vega, is}},
-        {"/lover/wunts/:who", ?USERNONCED,  {vega, wunts}},
+        {"/lover/wunts/:wut", ?USERNONCED,  {vega, wunts}},
+        {"/lover/about/moi",  ?USERNONCED,  {vega, about}},
         {"/admin",            ?ADMINLOGIN,  {vega, admin}},
         {"/admin/nonce",      ?ADMINNONCED, {vega, admin_action}}
     ].

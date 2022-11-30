@@ -1,0 +1,5 @@
+20 text/gemini
+
+# Welcome Administrator
+
+=> admin/nonce2F24DC1FE7AEEB1E8F8BC906232A7DB9 try and do somethin

@@ -13,8 +13,8 @@
 start(_StartType, _StartArgs) ->
     ok = ssl:start(),
     Port = 1965,
-    CertFile = "/vega_and_altair/priv/keys/server.crt",
-    KeyFile  = "/vega_and_altair/priv/keys/server.key",
+    CertFile = "./priv/keys/server.crt",
+    KeyFile  = "./priv/keys/server.key",
     _PID = belka:start(Port, CertFile, KeyFile, {belka_router, dispatch}),
     vega_and_altair_sup:start_link().
 
