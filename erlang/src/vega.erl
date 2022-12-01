@@ -144,6 +144,18 @@ date(Route, Vals) ->
 make_proposals([], _Id, Acc) -> Acc;
 make_proposals([{Key, V} | T], Id, Acc) ->
 	#{name := Name, about_moi := AM} = V,
-	Text = "💌 how about " ++ binary_to_list(Name) ++ "?\n" ++ AM,
+	Text = "💌 " ++ get_proposal() ++ binary_to_list(Name) ++ "?\n" ++ AM ++ "\n",
 	NewAcc = make_action_link(["date"], integer_to_list(Key), Id, Text),
 	make_proposals(T, Id, [NewAcc | Acc]).
+
+
+get_proposal() ->
+	Proposals = [
+				 "how about ",
+				 "fancy a bit of this ",
+				 "grrrrr ",
+				 "how about a bite of ",
+				 "a tickle of ",
+				 "checkout "
+				],
+	lists:nth(rand:uniform(length(Proposals)), Proposals).
