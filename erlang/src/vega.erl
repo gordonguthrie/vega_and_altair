@@ -6,7 +6,9 @@
 			lover/2,
 			is/2,
 			wunts/2,
-			about/2
+			about/2,
+			delete/2,
+			date/2
 		]).
 
 % administrator API
@@ -35,17 +37,39 @@ root(#{id := no_identity} = _Route, _Vals) ->
 	Page;
 root(#{id := #{name := Name} = Id} = _Route, _Vals) ->
 	IsLover = altair_lovers:is_lover(Id),
-	Footer = case IsLover of
-		false             -> make_link(["/"], "lover", "😻 What's ya story, pussycat?");
-		{true, is}        -> make_link(["/"], "lover", "😻 Who are ya, pussycat?");
-		{true, wunts}     -> make_link(["/"], "lover", "😻 Wut ❤️ seeks ya, pussycat?");
-		{true, about_moi} -> make_link(["/"], "lover", "💌 Da balcony is yours, Juliette");
-		{true, complete}  -> make_link(["/"], "",      "😻 🏹 💘💞")
-	end,
-	[
-		belka_templates:render("home_body", [{name, Name}]),
-		Footer
-	].
+	case IsLover of
+		false ->
+			[
+				belka_templates:render("home_body", [{name, Name}]),
+				make_link(["/"], "lover", "😻 What's ya story, pussycat?")
+			];
+		{true, is} ->
+			[
+				belka_templates:render("home_body", [{name, Name}]),
+				make_link(["/"], "lover", "😻 Who are ya, pussycat?")
+			];
+		{true, wunts} ->
+			[
+				belka_templates:render("home_body", [{name, Name}]),
+		 		make_link(["/"], "lover", "😻 Wut ❤️ seeks ya, pussycat?")
+			];
+		{true, about_moi} ->
+			[
+				belka_templates:render("home_body", [{name, Name}]),
+				make_link(["/"], "lover", "💌 Da balcony is yours, Juliette")
+			];
+		{true, complete} ->
+			Proposals = altair_lovers:nous_vous_proposons(Id),
+			[
+				belka_templates:render("home_active", [{name, Name}])
+			] ++
+			make_proposals(Proposals, Id, []) ++
+			[
+				belka_templates:render("generic_footer", []),
+				make_action_link(["lover"], "delete", Id, "⚰️ ya'self")
+			]
+	end.
+
 
 lover(#{id := Id}, _Vals) ->
 	Path = ["lover"],
@@ -108,5 +132,18 @@ admin(_Route, _Vals) ->
 		belka_templates:render("admin", [])
 	].
 
-% internal functions
+delete(#{id := Id}, _Vals) ->
+	ok = altair_lovers:delete(Id),
+	make_redirect("/").
 
+date(Route, Vals) ->
+	io:format("in Route ~p with Vals ~p~n", [Route, Vals]),
+	make_redirect("/").
+
+% internal functions
+make_proposals([], _Id, Acc) -> Acc;
+make_proposals([{Key, V} | T], Id, Acc) ->
+	#{name := Name, about_moi := AM} = V,
+	Text = "💌 how about " ++ binary_to_list(Name) ++ "?\n" ++ AM,
+	NewAcc = make_action_link(["date"], integer_to_list(Key), Id, Text),
+	make_proposals(T, Id, [NewAcc | Acc]).

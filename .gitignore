@@ -17,5 +17,5 @@ _build/
 _checkouts/
 
 .DS_Store
-priv/
+priv/keys/
 rebar.lock

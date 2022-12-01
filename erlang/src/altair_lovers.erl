@@ -25,6 +25,7 @@
             who_I_am/2,
             wut_I_wunt/2,
             about_moi/2,
+            delete/1,
             nous_vous_proposons/1
         ]).
 
@@ -74,6 +75,9 @@ wut_I_wunt(Id, [{"wut", What}]) ->
 about_moi(Id, Text) ->
     gen_server:call(?MODULE, {about_moi, Id, Text}).
 
+delete(Id) ->
+    gen_server:call(?MODULE, {delete, Id}).
+
 nous_vous_proposons(Id) ->
     gen_server:call(?MODULE, {nous_vous_proposons, Id}).
 
@@ -86,7 +90,6 @@ list_lovers() ->
 
 init(_Args) ->
     true = register(?MODULE, self()),
-    io:format("starting altair lovers~n"),
     {ok, #state{}}.
 
 handle_call({is_lover, #{key := Key}}, _From, State) ->
@@ -121,6 +124,18 @@ handle_call({about_moi, Id, Text}, _From, State) ->
     NewState= update_lover(State, Id, about_moi, Text, complete),
     {reply, ok, NewState};
 
+handle_call({nous_vous_proposons, #{key := Key}}, _From, State) ->
+    #state{lovers = Lovers} = State,
+    Me = maps:get(Key, Lovers),
+    #{is := Is, wunts := Wunts} = Me,
+    Matches = match(maps:iterator(Lovers), Is, Wunts, Key, []),
+    {reply, Matches, State};
+
+handle_call({delete, #{key := Key}}, _From, State) ->
+    #state{lovers = Lovers} = State,
+    NewLovers = maps:remove(Key, Lovers),
+    {reply, ok, State#state{lovers = NewLovers}};
+
 handle_call(list_lovers, _From, State) ->
     #state{lovers     = Lovers,
             no_lovers = No} = State,
@@ -145,6 +160,22 @@ code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
 
 %% Internal functions
+match(none, _, _, _Key, Acc) -> Acc;
+match(Iterator, Is, Wunts, Key, Acc) ->
+    {K, V, I} = maps:next(Iterator),
+    NewAcc = case V of
+        #{is        := Wunts,
+          wunts     := Is} ->
+            % don't match yourself
+            case K of
+                Key -> Acc;
+                _   -> [{K, V} | Acc]
+            end;
+        _ ->
+            Acc
+    end,
+    match(I, Is, Wunts, Key, NewAcc).
+
 update_lover(State, #{key :=K}, Key, Value, Next) ->
     #state{lovers = Lovers} = State,
     Lover = maps:get(K, Lovers),
@@ -154,7 +185,6 @@ update_lover(State, #{key :=K}, Key, Value, Next) ->
 
 print([]) -> ok;
 print([{K, V} | T]) ->
-    io:format("K is ~p V is ~p~n", [K, V]),
     Name     = maps:get(name, V),
     Is       = maps:get(is, V, not_provided_yet),
     Wunts    = maps:get(wunts, V, not_provided_yet),

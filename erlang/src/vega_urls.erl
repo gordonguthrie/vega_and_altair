@@ -12,13 +12,11 @@
 				]).
 
 make_link(Path, Extension, Text) ->
-	io:format("Path is ~p Extension is ~p Text is ~p~n", [Path, Extension, Text]),
 	URL   = string:join(Path ++ [Extension], "/"),
 	Start = list_to_binary("=> " ++ "/" ++ URL ++ " "),
 	Unicode = unicode:characters_to_binary(Text, utf8),
-  Link = re:replace(<<Start/binary, Unicode/binary, "\n">>, ?NEWLINE, ?CRLF, [global]),
-  io:format("Link is ~ts~n", [Link]),
-  Link.
+	Link = re:replace(<<Start/binary, Unicode/binary, "\n">>, ?NEWLINE, ?CRLF, [global]),
+	Link.
 
 make_action_link(Path, Extension, Id, Text) ->
 	Ext = Path ++ [Extension],
